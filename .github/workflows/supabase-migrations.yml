@@ -1,0 +1,38 @@
+name: Supabase migrations
+
+on:
+  push:
+    branches:
+      - Production
+      - "UAT(Pre-Production)"
+    paths:
+      - "supabase/migrations/**"
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Select target project
+        id: target
+        run: |
+          if [ "${{ github.ref_name }}" = "Production" ]; then
+            echo "project_ref=${{ secrets.PROD_PROJECT_REF }}" >> "$GITHUB_OUTPUT"
+            echo "db_password=${{ secrets.PROD_DB_PASSWORD }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "project_ref=${{ secrets.UAT_PROJECT_REF }}" >> "$GITHUB_OUTPUT"
+            echo "db_password=${{ secrets.UAT_DB_PASSWORD }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Push migrations
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ steps.target.outputs.db_password }}
+        run: |
+          supabase link --project-ref "${{ steps.target.outputs.project_ref }}"
+          supabase db push
