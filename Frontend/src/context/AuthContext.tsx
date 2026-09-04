@@ -7,7 +7,7 @@ import {
   type ReactNode,
 } from "react";
 import type { Session } from "@supabase/supabase-js";
-import { supabase } from "../lib/supabaseClient";
+import supabase from "../lib/supabaseClient";
 import type { AuthState, Role } from "../types/Auth";
 
 
